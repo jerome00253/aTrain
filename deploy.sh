@@ -1,27 +1,41 @@
 #!/bin/bash
 
 # --- Configuration ---
-# Adresse de votre registre
-DOCKER_REGISTRY="hub.jerome00253.ovh"
-# Votre nom d'utilisateur
-DOCKER_USER="jerome"
+# Adresse de votre registre (laisser vide pour Docker Hub officiel)
+DOCKER_REGISTRY=""
+# Votre nom d'utilisateur Docker Hub
+DOCKER_USER="jerome00253"
 IMAGE_NAME="atrain-web"
 TAG="latest"
 
 # --- Script ---
-FULL_IMAGE_NAME="$DOCKER_REGISTRY/$DOCKER_USER/$IMAGE_NAME:$TAG"
+if [ -z "$DOCKER_REGISTRY" ]; then
+    FULL_IMAGE_NAME="$DOCKER_USER/$IMAGE_NAME:$TAG"
+else
+    FULL_IMAGE_NAME="$DOCKER_REGISTRY/$DOCKER_USER/$IMAGE_NAME:$TAG"
+fi
 
 echo "🚀 Début du déploiement pour $FULL_IMAGE_NAME"
 
 # 0. Connexion au registre (si nécessaire)
-echo "🔒 Vérification de la connexion au registre..."
-if ! docker system info | grep -q "$DOCKER_REGISTRY"; then
-    echo "🔑 Connexion au registre $DOCKER_REGISTRY..."
-    docker login "$DOCKER_REGISTRY" -u "$DOCKER_USER"
-    if [ $? -ne 0 ]; then
-        echo "❌ Échec de la connexion au registre. Arrêt."
-        exit 1
+if [ -n "$DOCKER_REGISTRY" ]; then
+    echo "🔒 Vérification de la connexion au registre $DOCKER_REGISTRY..."
+    if ! docker system info | grep -q "$DOCKER_REGISTRY"; then
+        echo "🔑 Connexion au registre $DOCKER_REGISTRY..."
+        docker login "$DOCKER_REGISTRY" -u "$DOCKER_USER"
     fi
+else
+    echo "🔒 Vérification de la connexion à Docker Hub..."
+    # Pour Docker Hub, on vérifie simplement si on est loggé
+    if ! docker system info | grep -q "Username: $DOCKER_USER"; then
+        echo "🔑 Merci de vous connecter à votre compte Docker Hub ($DOCKER_USER) :"
+        docker login -u "$DOCKER_USER"
+    fi
+fi
+
+if [ $? -ne 0 ]; then
+    echo "❌ Échec de la connexion. Arrêt."
+    exit 1
 fi
 
 # 1. Build de l'image

@@ -1,0 +1,14 @@
+services:
+  atrain:
+    build: .
+    image: jerome00253/atrain-web:latest
+    container_name: atrain-web
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./settings:/settings
+      - ./models_cache:/models_cache
+    restart: unless-stopped
+    environment:
+      - NICEGUI_STORAGE_PATH=/settings
+      - XDG_CACHE_HOME=/models_cache
