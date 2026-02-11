@@ -1,0 +1,14 @@
+venv
+.venv
+__pycache__
+dist
+build
+aTrain.egg-info
+installer.iss
+test.py
+aTrain/required_models/*
+.DS_Store
+.cache
+
+deploy.sh
+.dockerignore

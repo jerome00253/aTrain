@@ -1,0 +1,11 @@
+venv
+.git
+atrain_core/.git
+models_cache
+settings
+*.pyc
+__pycache__
+.dockerignore
+Dockerfile
+docker-compose.yml
+deploy.sh
