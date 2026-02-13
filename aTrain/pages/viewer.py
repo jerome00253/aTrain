@@ -29,6 +29,14 @@ class TranscriptionEditor:
                 return json.load(f)
         return {"segments": []}
 
+    def rename_speaker(self, old_name: str, new_name: str):
+        """Globally rename a speaker in all segments."""
+        if not new_name.strip():
+            return
+        for seg in self.segments:
+            if seg.get('speaker') == old_name:
+                seg['speaker'] = new_name.strip()
+
     def _format_timestamp(self, seconds: float):
         td = float(seconds)
         h = int(td // 3600)
@@ -149,7 +157,7 @@ def page(file_id: str):
             cancel_btn = ui.button(tr("cancel"), icon="cancel", on_click=lambda: ui.navigate.reload()).props("outline no-caps size=sm color=red")
             cancel_btn.set_visibility(False)
 
-        container = ui.column().classes("w-full border p-4 bg-gray-50 mb-8 rounded-lg min-h-[60vh]")
+        container = ui.column().classes("w-full border p-4 bg-gray-50 mb-8 rounded-lg min-h-[40vh]")
         
         def inject_karaoke_js(js_segments):
             if audio_src and js_segments:
@@ -159,32 +167,31 @@ def page(file_id: str):
                         const segments = {segments_json};
                         const audio = document.getElementById('audio_player');
                         let activeIdx = -1;
+                        
+                        // Global function to sync active index and UI
+                        window.syncKaraoke = (currentTime) => {{
+                            if (!audio) return;
+                            const newIdx = segments.findIndex(s => currentTime >= s.start && currentTime <= s.end);
+                            
+                            if (newIdx !== activeIdx) {{
+                                if (activeIdx !== -1) {{
+                                    const el = document.getElementById(segments[activeIdx].id);
+                                    if (el) el.classList.remove('bg-orange-100', 'border-l-4', 'border-orange-500', 'shadow-sm', 'transition-all', 'duration-300');
+                                }}
+                                if (newIdx !== -1) {{
+                                    const el = document.getElementById(segments[newIdx].id);
+                                    if (el) {{
+                                        el.classList.add('bg-orange-100', 'border-l-4', 'border-orange-500', 'shadow-sm', 'transition-all', 'duration-300');
+                                        el.scrollIntoView({{behavior: "smooth", block: "center"}});
+                                    }}
+                                }}
+                                activeIdx = newIdx;
+                            }}
+                        }};
 
                         if (audio) {{
                             audio.ontimeupdate = () => {{
-                                const t = audio.currentTime;
-                                let newIdx = -1;
-                                for(let i=0; i<segments.length; i++) {{
-                                    if (t >= segments[i].start && t <= segments[i].end) {{
-                                        newIdx = i;
-                                        break;
-                                    }}
-                                }}
-                                
-                                if (newIdx !== activeIdx) {{
-                                    if (activeIdx !== -1) {{
-                                        const el = document.getElementById(segments[activeIdx].id);
-                                        if (el) el.classList.remove('bg-orange-100', 'border-l-4', 'border-orange-500', 'shadow-sm', 'transition-all', 'duration-300');
-                                    }}
-                                    if (newIdx !== -1) {{
-                                        const el = document.getElementById(segments[newIdx].id);
-                                        if (el) {{
-                                            el.classList.add('bg-orange-100', 'border-l-4', 'border-orange-500', 'shadow-sm', 'transition-all', 'duration-300');
-                                            el.scrollIntoView({{behavior: "smooth", block: "center"}});
-                                        }}
-                                    }}
-                                    activeIdx = newIdx;
-                                }}
+                                window.syncKaraoke(audio.currentTime);
                             }};
                         }}
                     }})();
@@ -194,7 +201,7 @@ def page(file_id: str):
             container.clear()
             js_segments = []
             with container:
-                editor.view_scroll_area = ui.scroll_area().style("height: 60vh").classes("w-full")
+                editor.view_scroll_area = ui.scroll_area().style("height: 40vh").classes("w-full")
                 with editor.view_scroll_area:
                     last_speaker = None
                     for i, seg in enumerate(editor.segments):
@@ -210,8 +217,9 @@ def page(file_id: str):
                              row.props(f'id={seg_id}')
                              if audio_src:
                                  ui.button(icon="play_arrow", on_click=lambda s=seg: editor.seek_audio(s['start'])).props("flat round size=xs color=grey-7")
-                             ui.label(editor._format_timestamp(seg['start'])).classes("text-xs text-grey-6 italic w-24 flex-shrink-0 mt-1.5")
-                             ui.label(seg['text']).classes("text-sm break-words flex-grow mt-0.5 leading-relaxed")
+                             with ui.column().classes("gap-0"):
+                                 ui.label(editor._format_timestamp(seg['start'])).classes("text-xs text-grey-6")
+                                 ui.label(seg['text']).classes("text-sm")
                              row.on('click', lambda s=seg: editor.seek_audio(s['start']))
             
             inject_karaoke_js(js_segments)
@@ -219,20 +227,39 @@ def page(file_id: str):
         def render_edit():
             container.clear()
             js_segments = []
+            
+            async def open_rename_dialog(old_name):
+                with ui.dialog() as dialog, ui.card().classes('p-4'):
+                    ui.label(f"Renommer le locuteur : {old_name}").classes('text-lg font-bold mb-4')
+                    new_name_input = ui.input(label="Nouveau nom", value=old_name).classes('w-full mb-4')
+                    with ui.row().classes('w-full justify-end gap-2'):
+                        ui.button("Annuler", on_click=dialog.close).props('outline color=grey')
+                        ui.button("Valider", on_click=lambda: (
+                            editor.rename_speaker(old_name, new_name_input.value),
+                            dialog.close(),
+                            render_edit()
+                        )).props('unelevated color=green icon=check')
+                dialog.open()
+
             with container:
-                with ui.scroll_area().style("height: 65vh").classes("w-full"):
+                with ui.scroll_area().style("height: 40vh").classes("w-full"):
                     for i, seg in enumerate(editor.segments):
                         seg_id = f"seg_{i}"
                         js_segments.append({"id": seg_id, "start": seg['start'], "end": seg['end']})
                         
-                        with ui.row().classes("w-full items-start gap-2 mb-3 no-wrap p-2 bg-white rounded shadow-sm border") as row:
+                        speaker = seg.get('speaker', 'SPEAKER_00')
+                        with ui.row().classes("w-full items-start gap-2 mb-1 no-wrap p-1 bg-white rounded shadow-sm border") as row:
                             row.props(f'id={seg_id}')
                             if audio_src:
-                                ui.button(icon="play_arrow", on_click=lambda s=seg: editor.seek_audio(s['start'])).props("flat round size=xs color=grey-7")
-                            with ui.column().classes("w-28 flex-shrink-0"):
-                                ui.label(seg.get('speaker', 'SPEAKER_00')).classes("text-xs font-bold text-primary")
-                                ui.label(editor._format_timestamp(seg['start'])).classes("text-xs text-grey-6")
-                            ui.textarea(value=seg['text'], on_change=lambda e, s=seg: s.update(text=e.value)).props("autogrow borderless").classes("flex-grow text-sm")
+                                ui.button(icon="play_arrow", on_click=lambda s=seg: editor.seek_audio(s['start'])).props("flat round size=xs color=grey-7").classes("mt-0.5")
+                            with ui.column().classes("w-28 flex-shrink-0 gap-0"):
+                                # Speaker name is now a clickable button for renaming
+                                ui.button(speaker, on_click=lambda s=speaker: open_rename_dialog(s)) \
+                                    .props("flat no-caps dense size=sm color=primary icon=edit") \
+                                    .classes("text-left font-bold p-0 min-h-0 text-sm")
+                                ui.label(editor._format_timestamp(seg['start'])).classes("text-[10px] text-grey-6 mt-[-2px]")
+                            ui.textarea(value=seg['text'], on_change=lambda e, s=seg: s.update(text=e.value)) \
+                                .props("autogrow borderless dense").classes("flex-grow text-sm py-0")
             
             inject_karaoke_js(js_segments)
 
