@@ -8,6 +8,12 @@ DOCKER_USER="jerome00253"
 IMAGE_NAME="atrain-web"
 TAG="latest"
 
+# Ask for tag
+read -p "Entrez le tag de la version (defaut: $TAG): " INPUT_TAG
+if [ -n "$INPUT_TAG" ]; then
+    TAG="$INPUT_TAG"
+fi
+
 # --- Script ---
 if [ -z "$DOCKER_REGISTRY" ]; then
     FULL_IMAGE_NAME="$DOCKER_USER/$IMAGE_NAME:$TAG"

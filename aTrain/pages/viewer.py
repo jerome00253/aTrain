@@ -2,6 +2,7 @@ import os
 import re
 import json
 import yaml
+import traceback
 from pathlib import Path
 from nicegui import ui, app
 from aTrain.layouts.base import base_layout
@@ -17,6 +18,9 @@ class TranscriptionEditor:
         self.segments = self.data.get("segments", [])
         self.editing = False
         self.audio_player = None
+        self.ui_segments = [] # List of (segment, element) tuples
+        self.active_index = -1
+        self.view_scroll_area = None
 
     def _load_json(self):
         path = os.path.join(self.directory, "transcription.json")
@@ -76,7 +80,7 @@ class TranscriptionEditor:
             with open(ts_path, "w", encoding="utf-8") as f:
                 f.write("\n".join(ts_content) + "\n")
 
-            # 5. Generate and save MAXQDA TXT (similar to timestamps but slightly different header/spacing often)
+            # 5. Generate and save MAXQDA TXT
             mq_path = os.path.join(self.directory, "transcription_maxqda.txt")
             with open(mq_path, "w", encoding="utf-8") as f:
                 f.write("\n".join(ts_content) + "\n")
@@ -92,6 +96,43 @@ class TranscriptionEditor:
         if self.audio_player:
             self.audio_player.seek(seconds)
             self.audio_player.play()
+
+    def update_highlight(self, current_time: float):
+        if self.editing:
+            return
+        
+        # DEBUG: Check if we are receiving updates
+        # print(f"DEBUG: update_highlight called with time={current_time}")
+
+        new_active_index = -1
+        # Find the segment containing the current time
+        for i, (seg, el) in enumerate(self.ui_segments):
+            if seg['start'] <= current_time <= seg['end']:
+                new_active_index = i
+                break
+        
+        # DEBUG: Check matching
+        # if new_active_index != self.active_index:
+        #     print(f"DEBUG: Highlight change: {self.active_index} -> {new_active_index}")
+
+        # Update UI if changed
+        if new_active_index != self.active_index:
+            print(f"DEBUG: Updating highlight from {self.active_index} to {new_active_index} at time {current_time}")
+            # Remove old highlight
+            if self.active_index != -1 and self.active_index < len(self.ui_segments):
+                _, old_el = self.ui_segments[self.active_index]
+                old_el.classes(remove='bg-orange-100 border-l-4 border-orange-500 shadow-sm transition-all duration-300')
+            
+            # Add new highlight
+            if new_active_index != -1:
+                _, new_el = self.ui_segments[new_active_index]
+                new_el.classes(add='bg-orange-100 border-l-4 border-orange-500 shadow-sm transition-all duration-300')
+                # Scroll into view using JS for better accuracy
+                js_cmd = f'const el = document.getElementById("seg_{new_active_index}"); if(el) el.scrollIntoView({{behavior: "smooth", block: "center"}}); else console.log("Element seg_{new_active_index} not found");'
+                print(f"DEBUG: Executing JS: {js_cmd}")
+                ui.run_javascript(js_cmd)
+
+            self.active_index = new_active_index
 
 @ui.page("/viewer/{file_id}")
 def page(file_id: str):
@@ -125,57 +166,65 @@ def page(file_id: str):
                 ui.button(tr("back_to_archive"), on_click=lambda: ui.navigate.to("/archive")).props("outline no-caps size=sm")
                 ui.button(tr("download_transcription"), on_click=lambda: download_zip(file_id)).props("unelevated no-caps size=sm color=dark")
 
-        with ui.card().classes("w-full q-pa-md mb-4"):
-            with ui.row().classes("w-full justify-between items-start"):
-                with ui.row().classes("gap-4"):
+        with ui.card().classes("w-full q-pa-md mb-4 shadow-lg"):
+            with ui.row().classes("w-full justify-between items-center"):
+                with ui.row().classes("gap-6"):
                     with ui.column().classes("gap-0"):
-                        ui.label(tr("date")).classes("text-xs text-grey")
-                        ui.label(metadata.get("timestamp", file_id[:20])).classes("text-sm")
+                        ui.label(tr("date")).classes("text-xs text-grey uppercase tracking-wider")
+                        ui.label(metadata.get("timestamp", file_id[:20])).classes("text-sm font-medium")
                     with ui.column().classes("gap-0"):
-                        ui.label(tr("input")).classes("text-xs text-grey")
-                        ui.label(metadata.get("filename", file_id[20:] or "n/a")).classes("text-sm")
+                        ui.label(tr("input")).classes("text-xs text-grey uppercase tracking-wider")
+                        ui.label(metadata.get("filename", file_id[20:] or "n/a")).classes("text-sm font-medium limit-text-32")
                 
                 if audio_src:
-                    editor.audio_player = ui.audio(audio_src).classes("w-64")
+                    editor.audio_player = ui.audio(audio_src).classes("w-full md:w-96")
+                    # Sync Karaoke using timeupdate event - e.args is a list of requested JS expressions
+                    editor.audio_player.on('timeupdate', lambda e: editor.update_highlight(float(e.args[0])) if e.args else None, args=['target.currentTime'], throttle=0.1)
 
         with ui.row().classes("w-full mb-4") as action_row:
-            edit_btn = ui.button(tr("edit"), icon="edit").props("unelevated no-caps size=sm")
+            edit_btn = ui.button(tr("edit"), icon="edit").props("unelevated no-caps size=sm color=primary")
             save_btn = ui.button(tr("save"), icon="save", on_click=editor.save).props("unelevated no-caps size=sm color=green")
             save_btn.set_visibility(False)
             cancel_btn = ui.button(tr("cancel"), icon="cancel", on_click=lambda: ui.navigate.reload()).props("outline no-caps size=sm color=red")
             cancel_btn.set_visibility(False)
 
-        container = ui.column().classes("w-full border p-4 bg-gray-50 mb-8")
+        container = ui.column().classes("w-full border p-4 bg-gray-50 mb-8 rounded-lg min-h-[60vh]")
         
         def render_view():
             container.clear()
+            editor.ui_segments = []
             with container:
-                with ui.scroll_area().style("height: 60vh"):
+                editor.view_scroll_area = ui.scroll_area().style("height: 60vh").classes("w-full")
+                with editor.view_scroll_area:
                     last_speaker = None
-                    for seg in editor.segments:
+                    for i, seg in enumerate(editor.segments):
                         speaker = seg.get('speaker', 'SPEAKER_00')
                         if speaker != last_speaker:
-                            ui.label(speaker).classes("text-xs font-bold mt-2 text-primary")
+                            ui.label(speaker).classes("text-xs font-bold mt-4 mb-1 text-primary-600 px-2")
                             last_speaker = speaker
                         
-                        with ui.row().classes("w-full items-start gap-2 mb-1 no-wrap hover:bg-gray-100 p-1 rounded"):
+                        with ui.row().classes("w-full items-start gap-2 mb-1 no-wrap hover:bg-gray-100 p-2 rounded cursor-pointer") as row:
+                             row.props(f'id=seg_{i}') # Assign ID for scrolling
                              if audio_src:
-                                 ui.button(icon="play_arrow", on_click=lambda s=seg: editor.seek_audio(s['start'])).props("flat round size=xs")
-                             ui.label(editor._format_timestamp(seg['start'])).classes("text-xs text-grey italic w-24 flex-shrink-0 mt-1")
-                             ui.label(seg['text']).classes("text-sm break-words flex-grow")
+                                 ui.button(icon="play_arrow", on_click=lambda s=seg: editor.seek_audio(s['start'])).props("flat round size=xs color=grey-7")
+                             ui.label(editor._format_timestamp(seg['start'])).classes("text-xs text-grey-6 italic w-24 flex-shrink-0 mt-1.5")
+                             ui.label(seg['text']).classes("text-sm break-words flex-grow mt-0.5 leading-relaxed")
+                             editor.ui_segments.append((seg, row))
+                             # Clicking row also seeks
+                             row.on('click', lambda s=seg: editor.seek_audio(s['start']))
 
         def render_edit():
             container.clear()
             with container:
                 with ui.scroll_area().style("height: 65vh").classes("w-full"):
                     for seg in editor.segments:
-                        with ui.row().classes("w-full items-start gap-2 mb-2 no-wrap p-1"):
+                        with ui.row().classes("w-full items-start gap-2 mb-3 no-wrap p-2 bg-white rounded shadow-sm border"):
                             if audio_src:
-                                ui.button(icon="play_arrow", on_click=lambda s=seg: editor.seek_audio(s['start'])).props("flat round size=xs")
-                            with ui.column().classes("w-24 flex-shrink-0"):
-                                ui.label(seg.get('speaker', 'SPEAKER_00')).classes("text-xs font-bold")
-                                ui.label(editor._format_timestamp(seg['start'])).classes("text-xs text-grey")
-                            ui.textarea(value=seg['text'], on_change=lambda e, s=seg: s.update(text=e.value)).props("autogrow borderless").classes("flex-grow bg-white p-2 border rounded text-sm shadow-sm")
+                                ui.button(icon="play_arrow", on_click=lambda s=seg: editor.seek_audio(s['start'])).props("flat round size=xs color=grey-7")
+                            with ui.column().classes("w-28 flex-shrink-0"):
+                                ui.label(seg.get('speaker', 'SPEAKER_00')).classes("text-xs font-bold text-primary")
+                                ui.label(editor._format_timestamp(seg['start'])).classes("text-xs text-grey-6")
+                            ui.textarea(value=seg['text'], on_change=lambda e, s=seg: s.update(text=e.value)).props("autogrow borderless").classes("flex-grow text-sm")
 
         def toggle_edit():
             editor.editing = not editor.editing
