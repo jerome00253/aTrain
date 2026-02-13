@@ -13,6 +13,7 @@ from starlette.formparsers import MultiPartParser
 from aTrain.components.dialogs.error import dialog_error
 from aTrain.components.dialogs.finished import dialog_finished
 from aTrain.components.dialogs.process import close_dialog_process, dialog_process
+from aTrain_core.globals import TRANSCRIPT_DIR
 from aTrain.utils.archive import delete_transcription
 
 MultiPartParser.spool_max_size = 1024 * 1024 * 1024 * 10  # 10 GB file size limit
@@ -37,6 +38,17 @@ async def start_transcription(file: events.UploadEventArguments):
         progress = manager.dict({"task": "Prepare", "current": 0, "total": 999999})
         dialog_process(progress)
         _, file_id, timestamp = prepare_transcription(Path(file.name))
+        
+        # Save original audio for later playback in viewer
+        audio_dir = Path(TRANSCRIPT_DIR) / file_id
+        audio_dir.mkdir(parents=True, exist_ok=True)
+        # We save it as source_audio with its original extension if possible
+        ext = Path(file.name).suffix or '.mp3'
+        audio_path = audio_dir / f"source_audio{ext}"
+        with open(audio_path, 'wb') as f:
+            f.write(file.content.read())
+        file.content.seek(0) # Reset stream for transcription
+
         state = cast(State, app.storage.general)
         try:
             settings = Settings(

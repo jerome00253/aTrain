@@ -15,7 +15,7 @@ async def splash_screen():
     if "torch" not in sys.modules.keys():
         with ui.column().classes("gap-0") as splash:
             splash.classes("w-full h-[90vh] items-center justify-center")
-            logo = ui.image(f"static/images/logo.svg?v={__version__}").props(
+            logo = ui.image(f"/static/images/logo.svg?v={__version__}").props(
                 "height=90px width=240px fit=contain"
             )
             logo.classes("mb-5")

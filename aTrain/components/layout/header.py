@@ -20,7 +20,7 @@ def header(drawer_handle: ui.drawer):
             with ui.button().classes("lt-md") as menu_button:
                 menu_button.props("color=white text-color=black icon=menu flat")
                 menu_button.on_click(lambda: drawer_handle.toggle())
-            ui.image(f"static/images/logo.svg?v={__version__}").props(
+            ui.image(f"/static/images/logo.svg?v={__version__}").props(
                 "height=30px width=80px fit=contain"
             )
         

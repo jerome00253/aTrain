@@ -70,6 +70,12 @@ STRINGS = {
         "download_transcription": "Download Transcription",
         "back_to_archive": "Back to Archive",
         "file_id": "File ID",
+        "save": "Save",
+        "edit": "Edit",
+        "cancel": "Cancel",
+        "save_success": "Transcription saved successfully!",
+        "format_error": "Error: Could not parse transcription format for editing.",
+        "listen": "Listen",
     },
     "fr": {
         "transcribe": "Transcrire",
@@ -140,6 +146,12 @@ STRINGS = {
         "download_transcription": "Télécharger la transcription",
         "back_to_archive": "Retour aux archives",
         "file_id": "Identifiant",
+        "save": "Enregistrer",
+        "edit": "Modifier",
+        "cancel": "Annuler",
+        "save_success": "Transcription enregistrée avec succès !",
+        "format_error": "Erreur : Impossible d'analyser le format de la transcription pour l'édition.",
+        "listen": "Écouter",
     }
 }
 

@@ -37,13 +37,17 @@ def dialog_process(progress: DictProxy):
 
 
 def update_progress(progress: DictProxy, start_time: datetime):
-    state = app.storage.general
-    state["progress"] = progress["current"] / progress["total"]
-    state["task"] = progress["task"]
-    total_tasks = 3 if state["speaker_detection"] else 2
-    current_task = {"Prepare": 1, "Transcribe": 2, "Detect Speakers": 3}[state["task"]]
-    state["task_number"] = f"{current_task}/{total_tasks}"
-    update_time(start_time)
+    try:
+        state = app.storage.general
+        state["progress"] = progress["current"] / progress["total"]
+        state["task"] = progress["task"]
+        total_tasks = 3 if state["speaker_detection"] else 2
+        current_task = {"Prepare": 1, "Transcribe": 2, "Detect Speakers": 3}.get(state["task"], 1)
+        state["task_number"] = f"{current_task}/{total_tasks}"
+        update_time(start_time)
+    except (FileNotFoundError, AttributeError, KeyError, Exception):
+        # Manager might be disconnected or closing, stop timer
+        close_dialog_process()
 
 
 def update_time(start_time: datetime):

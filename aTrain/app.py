@@ -42,6 +42,8 @@ with patch.dict(os.environ, NICEGUI_STORAGE_PATH=str(ATRAIN_DIR / "settings")):
     # Register static files directory
     static_dir = str(files("aTrain") / "static")
     app.add_static_files("/static", static_dir)
+    from aTrain_core.globals import TRANSCRIPT_DIR
+    app.add_static_files("/transcriptions", TRANSCRIPT_DIR)
 
 cli = Typer(help="CLI for aTrain.")
 

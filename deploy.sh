@@ -40,7 +40,7 @@ fi
 
 # 1. Build de l'image
 echo "📦 Build de l'image Docker..."
-docker build -t "$IMAGE_NAME" .
+docker build --build-arg BUILD_ID=$(date +%s) -t "$IMAGE_NAME" .
 
 if [ $? -ne 0 ]; then
     echo "❌ Erreur lors du build. Arrêt."
