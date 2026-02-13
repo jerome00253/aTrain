@@ -1,0 +1,11 @@
+audio_duration: 811
+compute_type: int8
+device: cpu
+file_id: 2602131601-SampleA
+filename: SampleAudio.mp3
+language: fr
+model: tiny
+num_speakers: null
+processing_time: 77
+speaker_detection: false
+timestamp: 2026-02-13 16-01-24

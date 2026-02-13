@@ -1,0 +1,11 @@
+[2026-02-13 16-01-24] ------ File ID created: 2602131601-SampleA
+[2026-02-13 16-01-24] ------ Directory created
+[2026-02-13 16-01-25] ------ Audio file loaded and decoded
+[2026-02-13 16-01-25] ------ Audio duration calculated
+[2026-02-13 16-01-25] ------ Metadata created
+[2026-02-13 16-01-25] ------ Model loaded
+[2026-02-13 16-01-25] ------ Transcribing in same process
+[2026-02-13 16-01-25] ------ Transcribing with regular model.
+[2026-02-13 16-02-41] ------ Transcription successful
+[2026-02-13 16-02-41] ------ No speaker detection. Created output files
+[2026-02-13 16-02-41] ------ Processing time added to metadata
