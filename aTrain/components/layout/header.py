@@ -6,9 +6,12 @@ from nicegui import ui
 
 from aTrain.version import __version__
 
-ATRAIN_LOGO = cast(Path, files("aTrain") / "static" / "images" / "logo.svg")
-GITHUB_LOGO = cast(Path, files("aTrain") / "static" / "images" / "github.svg")
-GITHUB_LINK = "https://github.com/JuergenFleiss/aTrain"
+from aTrain.utils.i18n import tr, get_lang, set_lang
+
+STATIC_DIR = Path(__file__).parents[2] / "static" / "images"
+ATRAIN_LOGO = STATIC_DIR / "logo.svg"
+GITHUB_LOGO = STATIC_DIR / "github.svg"
+GITHUB_LINK = "https://github.com/jerome00253/aTrain"
 
 
 def header(drawer_handle: ui.drawer):
@@ -17,8 +20,20 @@ def header(drawer_handle: ui.drawer):
             with ui.button().classes("lt-md") as menu_button:
                 menu_button.props("color=white text-color=black icon=menu flat")
                 menu_button.on_click(lambda: drawer_handle.toggle())
-            ui.image(ATRAIN_LOGO).props("height=30px width=80px fit=contain")
-        with ui.row().classes("items-center"):
-            ui.image(GITHUB_LOGO).props("height=25px width=25px fit=contain")
-            with ui.link(target=GITHUB_LINK, new_tab=True).classes("text-black"):
-                ui.label(f"Version {__version__}")
+            ui.image(f"static/images/logo.svg?v={__version__}").props(
+                "height=30px width=80px fit=contain"
+            )
+        
+        with ui.row().classes("items-center gap-4"):
+            # Language Switcher
+            current_lang = get_lang()
+            with ui.button_group().props("unelevated outline size=sm"):
+                btn_fr = ui.button("FR", on_click=lambda: (set_lang("fr"), ui.navigate.reload()))
+                btn_en = ui.button("EN", on_click=lambda: (set_lang("en"), ui.navigate.reload()))
+                if current_lang == "fr":
+                    btn_fr.props("color=dark")
+                else:
+                    btn_en.props("color=dark")
+
+            with ui.link(target=GITHUB_LINK, new_tab=True):
+                ui.image(GITHUB_LOGO).props("height=25px width=25px fit=contain")

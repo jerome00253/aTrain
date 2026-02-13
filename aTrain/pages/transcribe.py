@@ -8,8 +8,8 @@ from aTrain.components.settings.speaker_count import input_speaker_count
 from aTrain.components.settings.speaker_detection import input_speaker_detection
 from aTrain.components.splash_screen import splash_screen
 from aTrain.layouts.base import base_layout
+from aTrain.utils.i18n import tr
 from aTrain.utils.transcription import start_transcription
-
 
 @ui.page("/")
 async def page(client: Client):
@@ -26,9 +26,9 @@ async def page(client: Client):
             input_speaker_count()
         ui.separator().classes("mt-4")
         with ui.row().classes("w-full justify-between items-center"):
-            settings_btn = ui.button("Advanced Settings", color="gray-100")
+            settings_btn = ui.button(tr("advanced_settings"), color="gray-100")
             settings_btn.props("size=0.8rem unelevated no-caps icon=settings")
-            start_btn = ui.button("Start", on_click=file.upload, color="dark")
+            start_btn = ui.button(tr("start"), on_click=file.upload, color="dark")
             start_btn.props("no-caps unelevated")
             advanced_settings(open=False)
 

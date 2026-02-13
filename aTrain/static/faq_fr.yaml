@@ -1,0 +1,35 @@
+- question: "Combien de temps faut-il pour que la transcription se termine ?"
+  answer: "Cela dépend de votre matériel et du modèle sélectionné. Nos tests internes montrent qu'aTrain peut nécessiter jusqu'à 4 fois la durée de l'audio avec les modèles les plus grands sur des ordinateurs lents."
+
+- question: "Existe-t-il un moyen d'accélérer la transcription ?"
+  answer: "aTrain peut fonctionner sur le processeur (CPU) ou sur une carte graphique NVIDIA compatible CUDA (GPU). Pour accélérer vos transcriptions, envisagez d'utiliser un ordinateur avec un GPU NVIDIA compatible CUDA. Cela réduit considérablement les temps de traitement. Liste des GPU compatibles : https://developer.nvidia.com/cuda-gpus"
+
+- question: "Quelle est la différence entre les différents modèles de transcription ?"
+  answer: "aTrain utilise les modèles développés par OpenAI. Ils varient en taille : les modèles plus grands sont plus performants mais plus lents. Certains modèles sont optimisés pour des langues spécifiques, réduisant ainsi le temps de traitement."
+
+- question: "Quels formats audio/vidéo puis-je utiliser ?"
+  answer: "aTrain utilise l'outil de traitement média ffmpeg. Tous les formats supportés par ffmpeg sont compatibles avec aTrain. Plus d'infos sur www.ffmpeg.org"
+
+- question: "Dois-je spécifier la langue de mon fichier audio ?"
+  answer: "aTrain peut détecter automatiquement la langue. Cependant, cette détection peut parfois se tromper, surtout entre des langues proches. Si vous voulez être sûr, vous pouvez spécifier la langue manuellement."
+
+- question: "Puis-je transcrire des fichiers contenant plusieurs langues ?"
+  answer: "aTrain ne supporte pas actuellement la transcription multilingue dans un seul fichier. Nous recommandons de diviser votre enregistrement en fichiers séparés par langue."
+
+- question: "Ma langue n'est pas disponible, que puis-je faire ?"
+  answer: "Si votre langue n'est pas listée, elle n'est malheureusement pas supportée. aTrain repose sur les modèles OpenAI qui supportent un nombre limité de langues."
+
+- question: "Puis-je traduire les résultats de la transcription dans une autre langue ?"
+  answer: "aTrain peut traduire n'est possible que vers l'Anglais (en sélectionnant Anglais pour un audio dans une autre langue). Les autres langues de traduction ne sont pas supportées. Nous recommandons le modèle large-v3 pour de meilleurs résultats."
+
+- question: "Pourquoi aTrain ne détecte-t-il pas toujours correctement les locuteurs ?"
+  answer: "Le système de détection des locuteurs fonctionne mieux si le nombre de locuteurs est connu à l'avance. L'option de détection automatique peut donner des résultats moins précis."
+
+- question: "Puis-je obtenir le résultat dans un autre format ?"
+  answer: "Actuellement, aTrain exporte un format compatible avec les outils de recherche qualitative comme MAXQDA. Vous pouvez utiliser le fichier JSON en sortie pour construire votre propre format. N'hésitez pas à contacter les développeurs pour suggérer de nouveaux formats."
+
+- question: "aTrain envoie-t-il des données sur Internet ?"
+  answer: "En règle générale, non. Tous les modèles fonctionnent hors ligne. Certains modèles sont pré-installés, et vous pouvez en télécharger d'autres via le gestionnaire de modèles inclus."
+
+- question: "Où aTrain stocke-t-il mes transcriptions et les modèles ?"
+  answer: "aTrain enregistre vos transcriptions et modèles dans le dossier 'aTrain', situé dans votre dossier Documents système."

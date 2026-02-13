@@ -1,14 +1,15 @@
 from nicegui import ui
+from aTrain.utils.i18n import tr
 
 
 def sidebar():
     with ui.left_drawer().classes("bg-gray-100") as drawer_handle:
-        nav_button(icon="🎧", text="Transcribe", path="/")
-        nav_button(icon="💾", text="Archive", path="/archive")
-        nav_button(icon="🧮", text="Models", path="/models")
-        nav_button(icon="📖", text="FAQ", path="/faq")
+        nav_button(icon="🎧", text=tr("transcribe"), path="/")
+        nav_button(icon="💾", text=tr("archive"), path="/archive")
+        nav_button(icon="🧮", text=tr("models"), path="/models")
+        nav_button(icon="📖", text=tr("faq"), path="/faq")
         ui.separator()
-        nav_button(icon="💡", text="About", path="/about")
+        nav_button(icon="💡", text=tr("about"), path="/about")
     return drawer_handle
 
 

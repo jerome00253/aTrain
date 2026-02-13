@@ -12,3 +12,8 @@ aTrain/required_models/*
 
 deploy.sh
 .dockerignore
+
+# Data directories (Docker volumes)
+models_cache/
+transcriptions/
+settings/

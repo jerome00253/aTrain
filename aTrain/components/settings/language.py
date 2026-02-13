@@ -1,11 +1,12 @@
 from nicegui import ElementFilter, app, ui
+from aTrain.utils.i18n import tr
 
 from aTrain.utils.models import model_languages
 
 
 def input_language():
     with ui.column().classes("gap-2"):
-        ui.label("Select Language").classes("font-bold text-dark text-md")
+        ui.label(tr("select_language")).classes("font-bold text-dark text-md")
         ui.separator()
         with ui.select(options=get_language_options()) as select:
             select.classes("w-full").props("filled bg-color=gray-100 color=dark")

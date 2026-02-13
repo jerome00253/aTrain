@@ -7,10 +7,12 @@ name = "aTrain"
 description = "aTrain is a tool for automatically transcribing speech recordings utilizing state-of-the-art machine learning models without uploading any data."
 
 authors = [
+  { name = "LINHER Jérôme Patrice", email = "jerome0025@gmail.com" },
   { name = "Armin Haberl", email = "armin.haberl@uni-graz.at" },
   { name = "Jürgen Fleiß", email = "juergen.fleiss@uni-graz.at" },
   { name = "Dominik Kowald", email = "dkowald@know-center.at" },
   { name = "Stefan Thalmann", email = "stefan.thalmann@uni-graz.at" },
+  
 ]
 
 dynamic = ["version"]
@@ -19,21 +21,30 @@ license = { file = "LICENSE" }
 requires-python = ">=3.11"
 
 dependencies = [
-  "aTrain_core@git+https://github.com/JuergenFleiss/atrain_core.git@v1.4.1",
   "wakepy==0.7.2",
   "show-in-file-manager==1.1.4",
   "typer==0.16.0",
   "nicegui==2.21.1",
+  "dask; sys_platform == 'linux'",
+]
+
+[project.optional-dependencies]
+gui = [
   "pywebview==6.1",
   "pyqt5; sys_platform == 'linux'",
   "pyqtwebengine; sys_platform == 'linux'",
   "pywebview[qt]; sys_platform == 'linux'",
-  "dask; sys_platform == 'linux'",
 ]
+
+[tool.setuptools]
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["aTrain*"]
+
+[tool.setuptools.package-data]
+"aTrain" = ["static/**/*"]
 
 [project.scripts]
 aTrain = "aTrain.app:cli"

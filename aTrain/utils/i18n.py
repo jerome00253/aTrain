@@ -1,0 +1,158 @@
+from nicegui import app
+
+# Translation dictionary
+STRINGS = {
+    "en": {
+        "transcribe": "Transcribe",
+        "archive": "Archive",
+        "models": "Models",
+        "about": "About",
+        "faq": "FAQ",
+        "select_file": "Select File",
+        "select_model": "Select Model",
+        "select_language": "Select Language",
+        "speaker_detection": "Speaker Detection",
+        "speaker_count": "Speaker Count",
+        "advanced_settings": "Advanced Settings",
+        "start": "Start",
+        "open": "Open",
+        "delete": "Delete",
+        "delete_all": "Delete All",
+        "show_all": "Show All",
+        "date": "Date",
+        "input": "Input",
+        "actions": "Actions",
+        "transcription_finished": "Transcription Finished",
+        "transcription_failed": "Transcription Failed",
+        "processing": "Processing...",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "are_you_sure": "Are you sure?",
+        "downloading_model": "Downloading Model...",
+        "version": "Version",
+        "fork_text_1": "This project is a fork of Bandas-Center project.",
+        "fork_text_2": "Adapted for local authority needs.",
+        "original_project": "Original Project (Bandas-Center)",
+        "license": "Software License",
+        "contact": "Contact",
+        "author": "Author",
+        "file_added": "File Added",
+        "num_speakers": "Number of Speakers",
+        "detect_automatically": "Detect automatically",
+        "gpu_acceleration": "GPU acceleration",
+        "gpu_tooltip": "GPU acceleration is only available on cuda-enabled NVIDIA GPUs",
+        "compute_type": "Compute Type",
+        "compute_tooltip": "Int8 is the only option on CPU",
+        "temperature": "Temperature",
+        "initial_prompt": "Initial Prompt",
+        "placeholder_prompt": "Type here...",
+        "ok": "Ok",
+        "auto": "auto",
+        "about_title": "About aTrain",
+        "initial_authors": "Initial Authors:",
+        "main_developers": "Main Developers:",
+        "disclaimer": "Disclaimer: aTrain is not an offical app of the University of Graz.",
+        "privacy_policy": "Privacy Policy",
+        "model_manager": "Model Manager",
+        "model": "Model",
+        "download_size": "Download Size",
+        "download": "Download",
+        "finished_msg": "We finished the transcription!",
+        "transcribed_in": "We transcribed your file in",
+        "exit": "Exit",
+        "delete_all_confirm": "Are you sure you want to delete all transcriptions?",
+        "error_msg": "We encountered an error!",
+        "error_occured": "The following error occured:",
+        "show_traceback": "Show Traceback",
+        "copy_error": "Copy Error",
+        "error_copied": "Error copied",
+    },
+    "fr": {
+        "transcribe": "Transcrire",
+        "archive": "Archives",
+        "models": "Modèles",
+        "about": "À propos",
+        "faq": "FAQ",
+        "select_file": "Sélectionner un fichier",
+        "select_model": "Sélectionner un modèle",
+        "select_language": "Langue de l'audio",
+        "speaker_detection": "Détection des locuteurs",
+        "speaker_count": "Nombre de locuteurs",
+        "advanced_settings": "Paramètres avancés",
+        "start": "Démarrer",
+        "open": "Ouvrir",
+        "delete": "Supprimer",
+        "delete_all": "Tout supprimer",
+        "show_all": "Tout afficher",
+        "date": "Date",
+        "input": "Fichier source",
+        "actions": "Actions",
+        "transcription_finished": "Transcription terminée",
+        "transcription_failed": "Échec de la transcription",
+        "processing": "Traitement en cours...",
+        "cancel": "Annuler",
+        "confirm": "Confirmer",
+        "are_you_sure": "Êtes-vous sûr ?",
+        "downloading_model": "Téléchargement du modèle...",
+        "version": "Version",
+        "fork_text_1": "Ce projet est un fork du projet de Bandas-Center.",
+        "fork_text_2": "Adapté pour les besoins d'une collectivité territoriale.",
+        "original_project": "Projet original (Bandas-Center)",
+        "license": "Licence logicielle",
+        "contact": "Contact",
+        "author": "Auteur",
+        "file_added": "Fichier ajouté",
+        "num_speakers": "Nombre de locuteurs",
+        "detect_automatically": "Détecter automatiquement",
+        "gpu_acceleration": "Accélération GPU",
+        "gpu_tooltip": "L'accélération GPU n'est disponible que sur les cartes NVIDIA compatibles CUDA.",
+        "compute_type": "Type de calcul",
+        "compute_tooltip": "Int8 est la seule option sur CPU.",
+        "temperature": "Température",
+        "initial_prompt": "Prompt initial",
+        "placeholder_prompt": "Saisissez votre texte ici...",
+        "ok": "Ok",
+        "auto": "auto",
+        "about_title": "À propos d'aTrain",
+        "initial_authors": "Auteurs initiaux :",
+        "main_developers": "Développeurs principaux :",
+        "fork_developer": "Développeur du Fork :",
+        "disclaimer": "Avertissement : aTrain n'est pas une application officielle de l'Université de Graz.",
+        "privacy_policy": "Politique de confidentialité",
+        "model_manager": "Gestionnaire de modèles",
+        "model": "Modèle",
+        "download_size": "Taille",
+        "download": "Télécharger",
+        "finished_msg": "Transcription terminée !",
+        "transcribed_in": "Nous avons transcrit votre fichier en",
+        "exit": "Quitter",
+        "delete_all_confirm": "Êtes-vous sûr de vouloir supprimer toutes les transcriptions ?",
+        "error_msg": "Nous avons rencontré une erreur !",
+        "error_occured": "L'erreur suivante s'est produite :",
+        "show_traceback": "Afficher le détail de l'erreur",
+        "copy_error": "Copier l'erreur",
+        "error_copied": "Erreur copiée",
+    }
+}
+
+def tr(key: str) -> str:
+    """Get translated string for the given key based on user preference."""
+    try:
+        lang = app.storage.user.get("ui_lang", "fr")
+    except RuntimeError:
+        lang = "fr"
+    return STRINGS.get(lang, STRINGS["fr"]).get(key, key)
+
+def get_lang() -> str:
+    """Get current UI language."""
+    try:
+        return app.storage.user.get("ui_lang", "fr")
+    except RuntimeError:
+        return "fr"
+
+def set_lang(lang: str):
+    """Set current UI language."""
+    try:
+        app.storage.user["ui_lang"] = lang
+    except RuntimeError:
+        pass

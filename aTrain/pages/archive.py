@@ -5,7 +5,7 @@ from aTrain.layouts.base import base_layout
 from aTrain.utils.archive import delete_transcription as delete
 from aTrain.utils.archive import open_file_directory as show
 from aTrain.utils.archive import read_archive
-
+from aTrain.utils.i18n import tr
 
 @ui.page("/archive")
 def page():
@@ -13,13 +13,13 @@ def page():
 
     with base_layout():
         with ui.row().classes("justify-between w-full"):
-            ui.label("Archive").classes("text-lg text-dark font-bold")
+            ui.label(tr("archive")).classes("text-lg text-dark font-bold")
             with ui.row():
-                btn_show_all = ui.button("Show All", color="dark")
+                btn_show_all = ui.button(tr("show_all"), color="dark")
                 btn_show_all.props("size=0.8rem unelevated no-caps")
                 btn_show_all.on_click(lambda: show("all"))
 
-                btn_del_all = ui.button("Delete All", color="gray-100")
+                btn_del_all = ui.button(tr("delete_all"), color="gray-100")
                 btn_del_all.props("size=0.8rem unelevated no-caps")
                 btn_del_all.on_click(dialog_delete)
 
@@ -28,9 +28,9 @@ def page():
                 with ui.grid(columns="minmax(0, 60px) 1fr 1fr 1fr") as grid:
                     grid.classes("w-full text-grey text-xs items-end")
                     ui.label("#")
-                    ui.label("Date")
-                    ui.label("Input")
-                    ui.label("Actions")
+                    ui.label(tr("date"))
+                    ui.label(tr("input"))
+                    ui.label(tr("actions"))
             for i, transcription in enumerate(transcriptions):
                 with ui.item().classes("hover:bg-gray-100"):
                     with ui.grid(columns="minmax(0, 60px) 1fr 1fr 1fr") as grid:
@@ -39,9 +39,9 @@ def page():
                         ui.label(transcription["timestamp"]).classes("font-light")
                         ui.label(transcription["filename"]).classes("font-light")
                         with ui.row():
-                            btn_open = ui.button("open", color="dark")
+                            btn_open = ui.button(tr("open"), color="dark")
                             btn_open.props("no-caps size=0.7rem unelevated")
-                            btn_delete = ui.button("delete", color="gray-100")
+                            btn_delete = ui.button(tr("delete"), color="gray-100")
                             btn_delete.props("no-caps size=0.7rem unelevated")
                 btn_open.on_click(lambda t=transcription: show(t["file_id"]))
                 btn_delete.on_click(

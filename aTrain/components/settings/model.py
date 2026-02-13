@@ -1,5 +1,6 @@
 from aTrain_core.globals import REQUIRED_MODELS
 from nicegui import app, ui
+from aTrain.utils.i18n import tr
 
 from aTrain.components.settings.language import update_language_options
 from aTrain.utils.models import read_transcription_models
@@ -7,7 +8,7 @@ from aTrain.utils.models import read_transcription_models
 
 def input_model():
     with ui.column().classes("gap-2"):
-        ui.label("Select Model").classes("font-bold text-dark text-md")
+        ui.label(tr("select_model")).classes("font-bold text-dark text-md")
         ui.separator()
         with ui.select(options=get_model_options()).classes("w-full") as input:
             input.classes("w-full")

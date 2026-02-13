@@ -7,6 +7,8 @@ from importlib.resources import files
 import yaml
 from aTrain_core.globals import METADATA_FILENAME, TRANSCRIPT_DIR
 from showinfm import show_in_file_manager
+import tempfile
+from nicegui import ui, app
 
 
 def read_archive() -> list:
@@ -72,15 +74,36 @@ def open_file_directory(file_id) -> None:
     file_id = "" if file_id == "all" else file_id
     directory = os.path.join(TRANSCRIPT_DIR, file_id)
     if os.path.exists(directory):
-        if sys.platform.startswith("linux"):
-            subprocess.run(["xdg-open", directory], check=False)
+        # Check if we are in a web environment (NiceGUI client)
+        if app.native.main_window is None:
+            # Create a temporary ZIP file
+            temp_dir = tempfile.gettempdir()
+            zip_name = f"transcription_{file_id}" if file_id else "all_transcriptions"
+            zip_path = os.path.join(temp_dir, zip_name)
+            
+            # shutil.make_archive adds .zip extension automatically
+            shutil.make_archive(zip_path, 'zip', directory)
+            
+            # Trigger download
+            ui.download(f"{zip_path}.zip")
         else:
-            show_in_file_manager(directory)
+            # Desktop mode
+            if sys.platform.startswith("linux"):
+                subprocess.run(["xdg-open", directory], check=False)
+            else:
+                show_in_file_manager(directory)
 
 
 def load_faqs() -> dict:
     """A function that reads the content of the faq file."""
-    faq_path = str(files("aTrain.static").joinpath("faq.yaml"))
+    lang = app.storage.user.get("ui_lang", "fr")
+    filename = "faq_fr.yaml" if lang == "fr" else "faq.yaml"
+    faq_path = str(files("aTrain.static").joinpath(filename))
+    
+    # Fallback to English if French file is missing
+    if not os.path.exists(faq_path):
+        faq_path = str(files("aTrain.static").joinpath("faq.yaml"))
+        
     with open(faq_path, "r", encoding="utf-8") as faq_file:
         faqs: dict = yaml.safe_load(faq_file)
     return faqs

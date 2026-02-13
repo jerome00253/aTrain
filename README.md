@@ -1,85 +1,58 @@
-<img src="https://github.com/BANDAS-Center/aTrain/blob/main/docs/images/logo.svg" width="300" alt="Logo">
+# aTrain (Version Web)
 
-## Accessible Transcription of Interviews
-aTrain is a tool for automatically transcribing speech recordings utilizing state-of-the-art machine learning models without uploading any data. It was developed by researchers at the Business Analytics and Data Science-Center at the University of Graz and tested by researchers from the Know-Center Graz.
+aTrain est un outil open-source permettant la transcription automatique d'entretiens et d'enregistrements audio de manière totalement délocalisée (garantissant la confidentialité et le respect du RGPD).
 
-**Windows (10 and 11)** users can install aTrain via the Microsoft app store ([Link](https://apps.microsoft.com/store/detail/atrain/9N15Q44SZNS2)) or by downloading the installer from the BANDAS-Center Website ([Link](https://business-analytics.uni-graz.at/de/forschen/atrain/download/)).
+Il utilise des modèles d'apprentissage automatique de pointe sans jamais envoyer vos données sur le cloud.
 
-Beta Versions available for **MacOS (Apple Silicon)** and **Debian** package [here](https://business-analytics.uni-graz.at/en/research/atrain/download/) (build for Ubuntu 24.04 LTS-based systems).
+## 🚀 Fonctionnalités principales
 
+- **Transcription haute précision** : Utilise l'implémentation `faster-whisper` des modèles Whisper d'OpenAI.
+- **Diarisation (Détection des locuteurs)** : Identifie automatiquement qui parle dans l'enregistrement.
+- **Confidentialité Totale** : Le traitement est effectué 100% localement sur votre machine ou sur le serveur ou est installé l'application.
+- **Interface Web Moderne** : Interface accessible via navigateur grâce à NiceGUI.
 
-Cite the published paper if you used aTrain for your research: [Take the aTrain. Introducing an Interface for the Accessible Transcription of Interviews.](https://www.sciencedirect.com/science/article/pii/S2214635024000066)
+## 🐳 Installation via Docker (Docker Hub)
 
-## Becoming a developer
-Please refer to [Developer wiki page](https://github.com/JuergenFleiss/aTrain/wiki/Development:-Branching,-contributing-and-releases) for the details on how to contribute to the project and other useful information for developers.
+L'image officielle est hébergée sur Docker Hub pour une installation et une mise à jour facilitées.
 
+### 1. Télécharger l'image
+```bash
+docker pull jerome00253/atrain-web:latest
+```
 
-## About aTrain
+### 2. Lancer avec Docker Compose (Recommandé)
+Créez un fichier `docker-compose.yml` :
 
-aTrain offers the following benefits:
-\
-\
-**Fast and accurate 🚀**
-\
-aTrain provides a user friendly access to the [faster-whisper](https://github.com/guillaumekln/faster-whisper) implementation of OpenAI’s [Whisper model](https://github.com/openai/whisper), ensuring best in class transcription quality (see [Wollin-Geiring et al. 2023](https://www.static.tu.berlin/fileadmin/www/10005401/Publikationen_sos/Wollin-Giering_et_al_2023_Automatic_transcription.pdf)) paired with higher speeds on your local computer. Transcription when selecting the highest-quality model takes only around three times the audio length on current mobile CPUs typically found in middle-class business notebooks (e.g., Core i5 12th Gen, Ryzen Series 6000).
-\
-\
-**Speaker detection 🗣️**
-\
-aTrain has a speaker detection mode based on [pyannote.audio](https://github.com/pyannote/pyannote-audio) and can analyze each text segment to determine which speaker it belongs to.
-\
-\
-**Privacy Preservation and GDPR compliance 🔒**
-\
-aTrain processes the provided speech recordings completely offline on your own device and does not send recordings or transcriptions to the internet. This helps researchers to maintain data privacy requirements arising from ethical guidelines or to comply with legal requirements such as the GDPR.
-\
-\
-**Multi-language support 🌍**
-\
-aTrain-core can process speech recordings a total of 99 languages, including Afrikaans, Arabic, Armenian, Azerbaijani, Belarusian, Bosnian, Bulgarian, Catalan, Chinese, Croatian, Czech, Danish, Dutch, English, Estonian, Finnish, French, Galician, German, Greek, Hebrew, Hindi, Hungarian, Icelandic, Indonesian, Italian, Japanese, Kannada, Kazakh, Korean, Latvian, Lithuanian, Macedonian, Malay, Marathi, Maori, Nepali, Norwegian, Persian, Polish, Portuguese, Romanian, Russian, Serbian, Slovak, Slovenian, Spanish, Swahili, Swedish, Tagalog, Tamil, Thai, Turkish, Ukrainian, Urdu, Vietnamese, and Welsh. A full list can be found [here](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py). Note that transcription quality varies with language; word error rates for the different languages can be found [here](https://github.com/openai/whisper?tab=readme-ov-file#available-models-and-languages).
-\
-\
-**MAXQDA, ATLAS.ti and nVivo compatible output 📄**
-\
-aTrain-core provides transcription files that are seamlessly importable into the most popular tools for qualitative analysis, ATLAS.ti, MAXQDA and nVivo. This allows you to directly play audio for the corresponding text segment by clicking on its timestamp. Go to the [tutorial](https://github.com/BANDAS-Center/aTrain/wiki/Tutorials) for MAXQDA.
-\
-\
-**Nvidia GPU support 🖥️**
-\
-aTrain can either run on the CPU or an NVIDIA GPU (CUDA toolkit installation required). A [CUDA-enabled NVIDIA GPU](https://developer.nvidia.com/cuda-gpus) significantly improves the speed of transcriptions and speaker detection, reducing transcription time to 20% of audio length on current entry-level gaming notebooks.
+```yaml
+services:
+  atrain:
+    image: jerome00253/atrain-web:latest
+    container_name: atrain-web
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./settings:/data/aTrain/settings           # Pour conserver vos paramètres
+      - ./models_cache:/data/aTrain/models         # Pour éviter de retélécharger les modèles
+      - ./transcriptions:/data/aTrain/transcriptions # Pour récupérer vos résultats
+    environment:
+      - XDG_DOCUMENTS_DIR=/data
+    restart: unless-stopped
+```
 
-| Screenshot 1 | Screenshot 2 |
-| --- | --- |
-| ![Screenshot1](docs/images/screenshot_1.webp) | ![Screenshot2](docs/images/screenshot_2.webp) |
+Puis lancez :
+```bash
+docker compose up -d
+```
 
-## Benchmarks
-For testing the processing time of aTrain-core we transcribe a [conversation between Christine Lagarde and Andrea Enria at the Fifth ECB Forum on Banking Supervision 2023](https://www.youtube.com/watch?v=kd7e3OXkajY) published on YouTube by the European Central Bank under a Creative Commons license , downloaded as 320p MP4 video file. The file has a duration of exactly 22 minutes and was transcribed on different computing devices with speaker detection enabled. The figure below shows the processing time of each transcription.
+L'interface sera accessible sur `http://localhost:8088`.
 
-Transcription Time (incl. speaker detection) for 00:22:00 File:
+## 👨‍💻 Auteurs
+- **Armin Haberl** (armin.haberl@uni-graz.at)
+- **Jürgen Fleiß** (juergen.fleiss@uni-graz.at)
+- **Dominik Kowald** (dkowald@know-center.at)
+- **Stefan Thalmann** (stefan.thalmann@uni-graz.at)
 
-| Computing Device       |  large-v3   | Distil large-v3   | large-v3-turbo |
-| ---                    | ---         | ---               | ---            |
-| CPU: Ryzen 6850U       | 00:26:12    | 00:13:30          | 00:18:30       |
-| CPU: Apple M1          | 00:33:15    | 00:21:40          | 00:??:??       |
-| CPU: Intel i9-10940X   | 00:10:25    | 00:04:36          | 00:??:??       |
-| CPU: Intel i7-8750H    | 00:??:??    | 00:??:??          | 00:19:16       |
-| GPU: RTX 2080 Ti       | 00:01:44    | 00:01:06          | 00:??:??       |
-| GPU: RTX 2070 Max-Q    | 00:05:59    | 00:??:??          | 00:04:37       |
+Développé au **Business Analytics and Data Science-Center** de l'Université de Graz.
 
-
-## Roadmap and Upcoming Features
-
-Planned in the near future.
-- Batch Processing, allowing to have files queued for transcription
-- Add options for more verbatim output
-- Make adding custom models more easy
-- Stable Debian and MacOS installers
-- Somehow getting that flatpak package to work
-- Customization of output naming
-- Allowing users to setting the output directory
-- Allow for saving settings and defaults (currently resets after each transcription)  **Implemented in v1.4.0
-
-## Attribution
-The GIFs and Icons in aTrain are from [tenor](https://tenor.com/) and [flaticon](https://www.flaticon.com/). 
-
-
+## ⚖️ Licence
+Ce projet est sous licence **MIT**. Voir le fichier [LICENSE](LICENSE) pour plus de détails.

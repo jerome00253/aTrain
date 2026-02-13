@@ -1,5 +1,6 @@
 from aTrain_core.settings import load_formats
 from nicegui import ui
+from aTrain.utils.i18n import tr
 
 
 class CustomUpload(ui.upload):
@@ -17,11 +18,11 @@ class CustomUpload(ui.upload):
         self.run_method("upload")
 
     def set_added(self):
-        self.file_text = "1 File Added"
+        self.file_text = f"1 {tr('file_added')}"
         self.file_icon = "file_present"
 
     def set_select(self):
-        self.file_text = "Select File"
+        self.file_text = tr("select_file")
         self.file_icon = "attach_file"
 
 
@@ -31,7 +32,7 @@ def input_file() -> CustomUpload:
     uploader.props(f"accept='{allowed_files}'")
 
     with ui.column().classes("gap-2"):
-        ui.label("Select File").classes("font-bold text-dark text-md")
+        ui.label(tr("select_file")).classes("font-bold text-dark text-md")
         ui.separator()
         with ui.button() as select_button:
             select_button.props("color=gray-100 text-color=dark align=left")

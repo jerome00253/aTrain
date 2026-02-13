@@ -9,11 +9,15 @@ from nicegui import run, ui
 ATRAIN_LOGO = cast(Path, files("aTrain") / "static" / "images" / "logo.svg")
 
 
+from aTrain.version import __version__
+
 async def splash_screen():
     if "torch" not in sys.modules.keys():
         with ui.column().classes("gap-0") as splash:
             splash.classes("w-full h-[90vh] items-center justify-center")
-            logo = ui.image(ATRAIN_LOGO).props("height=90px width=240px fit=contain")
+            logo = ui.image(f"static/images/logo.svg?v={__version__}").props(
+                "height=90px width=240px fit=contain"
+            )
             logo.classes("mb-5")
             ui.label("Starting Application").classes("text-dark")
             ui.spinner("dots", size="2em", color="dark")
