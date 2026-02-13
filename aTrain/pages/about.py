@@ -3,7 +3,7 @@ from aTrain.layouts.base import base_layout
 from aTrain.utils.i18n import tr
 
 AUTHORS = ["Armin Haberl", "Jürgen Fleiß", "Dominik Kowald", "Stefan Thalmann"]
-DEVELOPERS = ["LINHER Jérôme", "KANKOWSKY Patrice"]
+DEVELOPERS = ["LINHER Jérôme (Commune Illzach)", "KANKOWSKY Patrice (Commune Illzach)"]
 MAIL = "mailto:jerome0025@gmail.com"
 LICENSE = "https://github.com/jerome00253/aTrain/blob/master/LICENSE"
 

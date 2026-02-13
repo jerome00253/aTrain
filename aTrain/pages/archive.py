@@ -38,12 +38,22 @@ def page():
                         ui.label(str(i + 1)).classes("text-medium")
                         ui.label(transcription["timestamp"]).classes("font-light")
                         ui.label(transcription["filename"]).classes("font-light")
-                        with ui.row():
-                            btn_open = ui.button(tr("open"), color="dark")
-                            btn_open.props("no-caps size=0.7rem unelevated")
-                            btn_delete = ui.button(tr("delete"), color="gray-100")
-                            btn_delete.props("no-caps size=0.7rem unelevated")
-                btn_open.on_click(lambda t=transcription: ui.navigate.to(f"/viewer/{t['file_id']}"))
-                btn_delete.on_click(
-                    lambda t=transcription: (delete(t["file_id"]), ui.navigate.reload())
-                )
+                        with ui.row().classes("gap-2 items-center"):
+                            btn_open = ui.button(icon="visibility", color="blue-6")
+                            btn_open.props(f'no-caps size=0.7rem unelevated title="{tr("detail")}"')
+                            btn_open.on_click(lambda t=transcription: ui.navigate.to(f"/viewer/{t['file_id']}"))
+
+                            # Download dropdown
+                            with ui.button(icon="download", color="green-6").props('no-caps size=0.7rem unelevated title="Download"') as btn_dl:
+                                with ui.menu() as menu:
+                                    ui.menu_item("JSON", on_click=lambda t=transcription: ui.download(f"/transcriptions/{t['file_id']}/transcription.json"))
+                                    ui.menu_item("SRT", on_click=lambda t=transcription: ui.download(f"/transcriptions/{t['file_id']}/transcription.srt"))
+                                    ui.menu_item("TXT", on_click=lambda t=transcription: ui.download(f"/transcriptions/{t['file_id']}/transcription.txt"))
+                                    ui.menu_item("Timestamps", on_click=lambda t=transcription: ui.download(f"/transcriptions/{t['file_id']}/transcription_timestamps.txt"))
+                                    ui.menu_item("MAXQDA", on_click=lambda t=transcription: ui.download(f"/transcriptions/{t['file_id']}/transcription_maxqda.txt"))
+
+                            btn_delete = ui.button(icon="delete", color="red-6")
+                            btn_delete.props(f'no-caps size=0.7rem unelevated title="{tr("delete")}"')
+                            btn_delete.on_click(
+                                lambda t=transcription: (delete(t["file_id"]), ui.navigate.reload())
+                            )

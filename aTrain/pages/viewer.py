@@ -97,43 +97,6 @@ class TranscriptionEditor:
             self.audio_player.seek(seconds)
             self.audio_player.play()
 
-    def update_highlight(self, current_time: float):
-        if self.editing:
-            return
-        
-        # DEBUG: Check if we are receiving updates
-        # print(f"DEBUG: update_highlight called with time={current_time}")
-
-        new_active_index = -1
-        # Find the segment containing the current time
-        for i, (seg, el) in enumerate(self.ui_segments):
-            if seg['start'] <= current_time <= seg['end']:
-                new_active_index = i
-                break
-        
-        # DEBUG: Check matching
-        # if new_active_index != self.active_index:
-        #     print(f"DEBUG: Highlight change: {self.active_index} -> {new_active_index}")
-
-        # Update UI if changed
-        if new_active_index != self.active_index:
-            print(f"DEBUG: Updating highlight from {self.active_index} to {new_active_index} at time {current_time}")
-            # Remove old highlight
-            if self.active_index != -1 and self.active_index < len(self.ui_segments):
-                _, old_el = self.ui_segments[self.active_index]
-                old_el.classes(remove='bg-orange-100 border-l-4 border-orange-500 shadow-sm transition-all duration-300')
-            
-            # Add new highlight
-            if new_active_index != -1:
-                _, new_el = self.ui_segments[new_active_index]
-                new_el.classes(add='bg-orange-100 border-l-4 border-orange-500 shadow-sm transition-all duration-300')
-                # Scroll into view using JS for better accuracy
-                js_cmd = f'const el = document.getElementById("seg_{new_active_index}"); if(el) el.scrollIntoView({{behavior: "smooth", block: "center"}}); else console.log("Element seg_{new_active_index} not found");'
-                print(f"DEBUG: Executing JS: {js_cmd}")
-                ui.run_javascript(js_cmd)
-
-            self.active_index = new_active_index
-
 @ui.page("/viewer/{file_id}")
 def page(file_id: str):
     directory = os.path.join(TRANSCRIPT_DIR, file_id)
@@ -168,18 +131,16 @@ def page(file_id: str):
 
         with ui.card().classes("w-full q-pa-md mb-4 shadow-lg"):
             with ui.row().classes("w-full justify-between items-center"):
-                with ui.row().classes("gap-6"):
-                    with ui.column().classes("gap-0"):
-                        ui.label(tr("date")).classes("text-xs text-grey uppercase tracking-wider")
-                        ui.label(metadata.get("timestamp", file_id[:20])).classes("text-sm font-medium")
-                    with ui.column().classes("gap-0"):
-                        ui.label(tr("input")).classes("text-xs text-grey uppercase tracking-wider")
-                        ui.label(metadata.get("filename", file_id[20:] or "n/a")).classes("text-sm font-medium limit-text-32")
+                with ui.column().classes("gap-0"):
+                    ui.label(tr("date")).classes("text-xs text-grey uppercase tracking-wider")
+                    ui.label(metadata.get("timestamp", file_id[:20])).classes("text-sm font-medium")
+                with ui.column().classes("gap-0"):
+                    ui.label(tr("input")).classes("text-xs text-grey uppercase tracking-wider")
+                    ui.label(metadata.get("filename", file_id[20:] or "n/a")).classes("text-sm font-medium limit-text-32")
                 
                 if audio_src:
                     editor.audio_player = ui.audio(audio_src).classes("w-full md:w-96")
-                    # Sync Karaoke using timeupdate event - e.args is a list of requested JS expressions
-                    editor.audio_player.on('timeupdate', lambda e: editor.update_highlight(float(e.args[0])) if e.args else None, args=['target.currentTime'], throttle=0.1)
+                    editor.audio_player.props('id=audio_player') # Fixed ID for JS access
 
         with ui.row().classes("w-full mb-4") as action_row:
             edit_btn = ui.button(tr("edit"), icon="edit").props("unelevated no-caps size=sm color=primary")
@@ -190,9 +151,48 @@ def page(file_id: str):
 
         container = ui.column().classes("w-full border p-4 bg-gray-50 mb-8 rounded-lg min-h-[60vh]")
         
+        def inject_karaoke_js(js_segments):
+            if audio_src and js_segments:
+                segments_json = json.dumps(js_segments)
+                ui.run_javascript(f'''
+                    (() => {{
+                        const segments = {segments_json};
+                        const audio = document.getElementById('audio_player');
+                        let activeIdx = -1;
+
+                        if (audio) {{
+                            audio.ontimeupdate = () => {{
+                                const t = audio.currentTime;
+                                let newIdx = -1;
+                                for(let i=0; i<segments.length; i++) {{
+                                    if (t >= segments[i].start && t <= segments[i].end) {{
+                                        newIdx = i;
+                                        break;
+                                    }}
+                                }}
+                                
+                                if (newIdx !== activeIdx) {{
+                                    if (activeIdx !== -1) {{
+                                        const el = document.getElementById(segments[activeIdx].id);
+                                        if (el) el.classList.remove('bg-orange-100', 'border-l-4', 'border-orange-500', 'shadow-sm', 'transition-all', 'duration-300');
+                                    }}
+                                    if (newIdx !== -1) {{
+                                        const el = document.getElementById(segments[newIdx].id);
+                                        if (el) {{
+                                            el.classList.add('bg-orange-100', 'border-l-4', 'border-orange-500', 'shadow-sm', 'transition-all', 'duration-300');
+                                            el.scrollIntoView({{behavior: "smooth", block: "center"}});
+                                        }}
+                                    }}
+                                    activeIdx = newIdx;
+                                }}
+                            }};
+                        }}
+                    }})();
+                ''')
+
         def render_view():
             container.clear()
-            editor.ui_segments = []
+            js_segments = []
             with container:
                 editor.view_scroll_area = ui.scroll_area().style("height: 60vh").classes("w-full")
                 with editor.view_scroll_area:
@@ -203,28 +203,38 @@ def page(file_id: str):
                             ui.label(speaker).classes("text-xs font-bold mt-4 mb-1 text-primary-600 px-2")
                             last_speaker = speaker
                         
+                        seg_id = f"seg_{i}"
+                        js_segments.append({"id": seg_id, "start": seg['start'], "end": seg['end']})
+                        
                         with ui.row().classes("w-full items-start gap-2 mb-1 no-wrap hover:bg-gray-100 p-2 rounded cursor-pointer") as row:
-                             row.props(f'id=seg_{i}') # Assign ID for scrolling
+                             row.props(f'id={seg_id}')
                              if audio_src:
                                  ui.button(icon="play_arrow", on_click=lambda s=seg: editor.seek_audio(s['start'])).props("flat round size=xs color=grey-7")
                              ui.label(editor._format_timestamp(seg['start'])).classes("text-xs text-grey-6 italic w-24 flex-shrink-0 mt-1.5")
                              ui.label(seg['text']).classes("text-sm break-words flex-grow mt-0.5 leading-relaxed")
-                             editor.ui_segments.append((seg, row))
-                             # Clicking row also seeks
                              row.on('click', lambda s=seg: editor.seek_audio(s['start']))
+            
+            inject_karaoke_js(js_segments)
 
         def render_edit():
             container.clear()
+            js_segments = []
             with container:
                 with ui.scroll_area().style("height: 65vh").classes("w-full"):
-                    for seg in editor.segments:
-                        with ui.row().classes("w-full items-start gap-2 mb-3 no-wrap p-2 bg-white rounded shadow-sm border"):
+                    for i, seg in enumerate(editor.segments):
+                        seg_id = f"seg_{i}"
+                        js_segments.append({"id": seg_id, "start": seg['start'], "end": seg['end']})
+                        
+                        with ui.row().classes("w-full items-start gap-2 mb-3 no-wrap p-2 bg-white rounded shadow-sm border") as row:
+                            row.props(f'id={seg_id}')
                             if audio_src:
                                 ui.button(icon="play_arrow", on_click=lambda s=seg: editor.seek_audio(s['start'])).props("flat round size=xs color=grey-7")
                             with ui.column().classes("w-28 flex-shrink-0"):
                                 ui.label(seg.get('speaker', 'SPEAKER_00')).classes("text-xs font-bold text-primary")
                                 ui.label(editor._format_timestamp(seg['start'])).classes("text-xs text-grey-6")
                             ui.textarea(value=seg['text'], on_change=lambda e, s=seg: s.update(text=e.value)).props("autogrow borderless").classes("flex-grow text-sm")
+            
+            inject_karaoke_js(js_segments)
 
         def toggle_edit():
             editor.editing = not editor.editing

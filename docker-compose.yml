@@ -9,6 +9,7 @@ services:
       - ./settings:/data/aTrain/settings
       - ./models_cache:/data/aTrain/models
       - ./transcriptions:/data/aTrain/transcriptions
+      - ./custom_assets:/data/aTrain/custom_assets
     restart: unless-stopped
     environment:
       - XDG_DOCUMENTS_DIR=/data

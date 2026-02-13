@@ -40,9 +40,23 @@ with patch.dict(os.environ, NICEGUI_STORAGE_PATH=str(ATRAIN_DIR / "settings")):
     from aTrain.pages import about, archive, faq, models, transcribe, viewer  # noqa
 
     # Register static files directory
-    static_dir = str(files("aTrain") / "static")
+    # Default static (bundled in package)
+    pkg_static_dir = str(files("aTrain") / "static")
+    
+    # Optional custom static (in persistent /data for live updates)
+    from aTrain_core.globals import ATRAIN_DIR, TRANSCRIPT_DIR
+    custom_static_dir = ATRAIN_DIR / "custom_assets"
+    
+    if custom_static_dir.exists():
+        # Serve custom assets first so they can override bundled ones
+        app.add_static_files("/static/custom", str(custom_static_dir))
+        # Note: We keep /static for the bundled ones to ensure CSS/JS works
+        # but we'll instruct the user to use /static/custom for live logos
+        static_dir = pkg_static_dir
+    else:
+        static_dir = pkg_static_dir
+
     app.add_static_files("/static", static_dir)
-    from aTrain_core.globals import TRANSCRIPT_DIR
     app.add_static_files("/transcriptions", TRANSCRIPT_DIR)
 
 cli = Typer(help="CLI for aTrain.")

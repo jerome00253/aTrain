@@ -15,12 +15,28 @@ GITHUB_LINK = "https://github.com/jerome00253/aTrain"
 
 
 def header(drawer_handle: ui.drawer):
+    # Detect logo (check custom first)
+    from aTrain_core.globals import ATRAIN_DIR
+    import os
+    
+    logo_src = f"/static/images/logo.svg?v={__version__}"
+    custom_dir = ATRAIN_DIR / "custom_assets"
+    
+    # Check for custom logos in order of preference
+    for ext in ['svg', 'png', 'jpg', 'jpeg', 'webp']:
+        custom_file = custom_dir / f"logo.{ext}"
+        if custom_file.exists():
+            # Use mtime for cache busting to allow live updates without rebuild
+            mtime = os.path.getmtime(custom_file)
+            logo_src = f"/static/custom/logo.{ext}?v={mtime}"
+            break
+
     with ui.header().classes("bg-white justify-between items-center px-10"):
         with ui.row().classes("items-center"):
             with ui.button().classes("lt-md") as menu_button:
                 menu_button.props("color=white text-color=black icon=menu flat")
                 menu_button.on_click(lambda: drawer_handle.toggle())
-            ui.image(f"/static/images/logo.svg?v={__version__}").props(
+            ui.image(logo_src).props(
                 "height=30px width=80px fit=contain"
             )
         
