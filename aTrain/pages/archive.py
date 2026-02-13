@@ -43,7 +43,7 @@ def page():
                             btn_open.props("no-caps size=0.7rem unelevated")
                             btn_delete = ui.button(tr("delete"), color="gray-100")
                             btn_delete.props("no-caps size=0.7rem unelevated")
-                btn_open.on_click(lambda t=transcription: show(t["file_id"]))
+                btn_open.on_click(lambda t=transcription: ui.navigate.to(f"/viewer/{t['file_id']}"))
                 btn_delete.on_click(
                     lambda t=transcription: (delete(t["file_id"]), ui.navigate.reload())
                 )

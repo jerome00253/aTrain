@@ -37,7 +37,7 @@ keep = RobustKeep()
 with patch.dict(os.environ, NICEGUI_STORAGE_PATH=str(ATRAIN_DIR / "settings")):
     from nicegui import app, ui
 
-    from aTrain.pages import about, archive, faq, models, transcribe  # noqa
+    from aTrain.pages import about, archive, faq, models, transcribe, viewer  # noqa
 
     # Register static files directory
     static_dir = str(files("aTrain") / "static")

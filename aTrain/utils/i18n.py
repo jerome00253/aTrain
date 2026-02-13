@@ -66,6 +66,10 @@ STRINGS = {
         "show_traceback": "Show Traceback",
         "copy_error": "Copy Error",
         "error_copied": "Error copied",
+        "view_transcription": "View Transcription",
+        "download_transcription": "Download Transcription",
+        "back_to_archive": "Back to Archive",
+        "file_id": "File ID",
     },
     "fr": {
         "transcribe": "Transcrire",
@@ -132,6 +136,10 @@ STRINGS = {
         "show_traceback": "Afficher le détail de l'erreur",
         "copy_error": "Copier l'erreur",
         "error_copied": "Erreur copiée",
+        "view_transcription": "Voir la transcription",
+        "download_transcription": "Télécharger la transcription",
+        "back_to_archive": "Retour aux archives",
+        "file_id": "Identifiant",
     }
 }
 
